@@ -1,44 +1,154 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>Azure</title>
+  <title>Azure Files with Notes</title>
   <style>
     body {
-      background-color: #1e2633;
-      color: white;
-      font-family: Arial, sans-serif;
       margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #fff;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 25%;
+      background-color: #222;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #444;
+    }
+
+    .header {
       padding: 20px;
+      box-sizing: border-box;
+      border-bottom: 1px solid #444;
     }
-    h1 {
+
+    .header h1 {
       color: #00bfff;
+      font-size: 20px;
+      margin: 0 0 10px;
     }
+
+    .notes {
+      margin-bottom: 10px;
+    }
+
+    .notes textarea {
+      width: 100%;
+      height: 120px;
+      padding: 10px;
+      background-color: #111;
+      color: #fff;
+      border: 1px solid #555;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+
+    .file-list {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
     ul {
       list-style-type: none;
-      padding-left: 0;
+      padding: 0;
+      margin: 0;
     }
+
     li {
       margin: 10px 0;
     }
+
     a {
-      color: #00ffe5;
+      color: #90ee90;
       text-decoration: none;
     }
+
     a:hover {
       text-decoration: underline;
     }
-    .error {
-      color: red;
+
+    .pdf-viewer {
+      flex-grow: 1;
+      padding: 20px;
+      background-color: #333;
+      box-sizing: border-box;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 2px solid #666;
+      background: #fff;
     }
   </style>
 </head>
 <body>
-  <h1>Azure files</h1>
-  <ul id="file-list">
-    <li>Loading files...</li>
-  </ul>
+  <div class="container">
+    <div class="sidebar">
+      <div class="header">
+        <h1>Azure Files</h1>
+        <div class="notes">
+          <textarea id="notes" placeholder="Write your notes here..."></textarea>
+        </div>
+      </div>
+      <div class="file-list">
+        <ul id="fileList"></ul>
+      </div>
+    </div>
 
-  <script src="script.js"></script>
+    <div class="pdf-viewer">
+      <iframe id="pdfViewer" src=""></iframe>
+    </div>
+  </div>
+
+  <script>
+    const notesArea = document.getElementById('notes');
+    let currentFile = "";
+
+    function saveCurrentNotes() {
+      if (currentFile) {
+        localStorage.setItem('notes_' + currentFile, notesArea.value);
+      }
+    }
+
+    function loadNotes(file) {
+      const saved = localStorage.getItem('notes_' + file);
+      notesArea.value = saved || '';
+    }
+
+    notesArea.addEventListener('input', saveCurrentNotes);
+    window.addEventListener('beforeunload', saveCurrentNotes);
+
+    fetch('files.json')
+      .then(response => response.json())
+      .then(files => {
+        const fileList = document.getElementById('fileList');
+        files.forEach(file => {
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = "#";
+          a.textContent = file;
+          a.onclick = () => {
+            document.getElementById('pdfViewer').src = file;
+            saveCurrentNotes();
+            loadNotes(file);
+            currentFile = file;
+            return false;
+          };
+          li.appendChild(a);
+          fileList.appendChild(li);
+        });
+      });
+  </script>
 </body>
 </html>
